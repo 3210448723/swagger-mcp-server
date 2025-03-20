@@ -1,115 +1,115 @@
 /**
- * TypeScript类型生成器MCP工具
+ * TypeScript Type Generator MCP Tool
  */
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { TypeScriptTypesGenerator, TypeScriptTypesGeneratorOptions } from '../generators/typescript-types-generator';
 
-// MCP工具名称和描述
+// MCP tool names and descriptions
 const TS_TYPES_GENERATOR_TOOL_NAME = 'generate-typescript-types';
-const TS_TYPES_GENERATOR_TOOL_DESCRIPTION = '从Swagger/OpenAPI文档生成TypeScript类型定义。';
+const TS_TYPES_GENERATOR_TOOL_DESCRIPTION = 'Generate TypeScript type definitions from Swagger/OpenAPI document.';
 
-// 性能优化版工具名称和描述
+// Optimized version tool names and descriptions
 const TS_TYPES_GENERATOR_OPTIMIZED_TOOL_NAME = 'generate-typescript-types-optimized';
-const TS_TYPES_GENERATOR_OPTIMIZED_TOOL_DESCRIPTION = '使用优化选项从Swagger/OpenAPI文档生成TypeScript类型定义，支持缓存和大型文档处理。';
+const TS_TYPES_GENERATOR_OPTIMIZED_TOOL_DESCRIPTION = 'Generate TypeScript type definitions from Swagger/OpenAPI document with optimized options for caching and large document support.';
 
 /**
- * TypeScript类型生成器工具类
+ * TypeScript Type Generator Tool Class
  */
 export class TypeScriptTypesGeneratorTool {
   name = TS_TYPES_GENERATOR_TOOL_NAME;
   description = TS_TYPES_GENERATOR_TOOL_DESCRIPTION;
 
-  // 定义参数模式
+  // Define parameter schema
   schema = z.object({
     /**
-     * Swagger/OpenAPI文档URL
+     * Swagger/OpenAPI document URL
      */
-    swaggerUrl: z.string().describe('Swagger/OpenAPI文档URL'),
+    swaggerUrl: z.string().describe('Swagger/OpenAPI document URL'),
     
     /**
-     * 输出目录
+     * Output directory
      */
-    outputDir: z.string().optional().describe('输出目录'),
+    outputDir: z.string().optional().describe('Output directory'),
     
     /**
-     * 是否覆盖现有文件
+     * Whether to overwrite existing files
      */
-    overwrite: z.boolean().optional().describe('是否覆盖现有文件'),
+    overwrite: z.boolean().optional().describe('Whether to overwrite existing files'),
     
     /**
-     * 文件前缀
+     * File prefix
      */
-    filePrefix: z.string().optional().describe('文件前缀'),
+    filePrefix: z.string().optional().describe('File prefix'),
     
     /**
-     * 文件后缀
+     * File suffix
      */
-    fileSuffix: z.string().optional().describe('文件后缀'),
+    fileSuffix: z.string().optional().describe('File suffix'),
     
     /**
-     * 使用命名空间包装类型
+     * Whether to use namespace
      */
-    useNamespace: z.boolean().optional().describe('使用命名空间包装类型'),
+    useNamespace: z.boolean().optional().describe('Whether to use namespace for wrapping types'),
     
     /**
-     * 命名空间名称
+     * Namespace name
      */
-    namespace: z.string().optional().describe('命名空间名称'),
+    namespace: z.string().optional().describe('Namespace name'),
     
     /**
-     * 是否生成枚举类型
+     * Whether to generate enums
      */
-    generateEnums: z.boolean().optional().describe('是否生成枚举类型'),
+    generateEnums: z.boolean().optional().describe('Whether to generate enum types'),
     
     /**
-     * 是否使用严格类型
+     * Whether to use strict types
      */
-    strictTypes: z.boolean().optional().describe('是否使用严格类型'),
+    strictTypes: z.boolean().optional().describe('Whether to use strict types'),
     
     /**
-     * 排除的模式名称数组
+     * Excluded schema names
      */
-    excludeSchemas: z.array(z.string()).optional().describe('排除的模式名称数组'),
+    excludeSchemas: z.array(z.string()).optional().describe('Array of schema names to exclude'),
     
     /**
-     * 包含的模式名称数组
+     * Included schema names
      */
-    includeSchemas: z.array(z.string()).optional().describe('包含的模式名称数组'),
+    includeSchemas: z.array(z.string()).optional().describe('Array of schema names to include'),
     
     /**
-     * 是否生成索引文件
+     * Whether to generate index file
      */
-    generateIndex: z.boolean().optional().describe('是否生成索引文件'),
+    generateIndex: z.boolean().optional().describe('Whether to generate an index file'),
     
     /**
-     * 请求头信息
+     * Request headers
      */
-    headers: z.record(z.string()).optional().describe('请求头信息'),
+    headers: z.record(z.string()).optional().describe('Request headers'),
     
     /**
-     * 是否使用缓存
+     * Whether to use cache
      */
-    useCache: z.boolean().optional().describe('是否使用缓存'),
+    useCache: z.boolean().optional().describe('Whether to use cache'),
     
     /**
-     * 缓存有效期（分钟）
+     * Cache TTL in minutes
      */
-    cacheTTLMinutes: z.number().optional().describe('缓存有效期（分钟）'),
+    cacheTTLMinutes: z.number().optional().describe('Cache TTL in minutes'),
     
     /**
-     * 是否跳过验证
+     * Whether to skip validation
      */
-    skipValidation: z.boolean().optional().describe('是否跳过验证'),
+    skipValidation: z.boolean().optional().describe('Whether to skip validation'),
     
     /**
-     * 是否启用懒加载
+     * Whether to use lazy loading
      */
-    lazyLoading: z.boolean().optional().describe('是否启用懒加载')
+    lazyLoading: z.boolean().optional().describe('Whether to use lazy loading')
   });
 
   /**
-   * 在MCP服务器上注册工具
+   * Register tool on the MCP server
    */
   register(server: McpServer) {
     // 注册标准工具
@@ -148,7 +148,7 @@ export class TypeScriptTypesGeneratorTool {
   }
 
   /**
-   * 执行TypeScript类型生成
+   * Execute TypeScript type generation
    */
   async execute(params: z.infer<typeof this.schema>) {
     let progress = 0;

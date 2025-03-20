@@ -1,37 +1,37 @@
 /**
- * MCP 文件写入工具
- * 提供写入文件到本地文件系统的能力，支持自动创建目录
+ * MCP File Writer Tool
+ * Provides the ability to write files to the local file system, with support for automatic directory creation
  */
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-// 文件写入参数的验证模式
+// File writer parameter validation schema
 const fileWriterSchema = z.object({
-  filePath: z.string().min(1).describe('文件的完整路径'),
-  content: z.string().describe('要写入文件的内容'),
-  createDirs: z.boolean().optional().default(true).describe('如果父目录不存在，是否自动创建'),
-  append: z.boolean().optional().default(false).describe('是否追加到现有文件而不是覆盖'),
-  encoding: z.string().optional().default('utf8').describe('文件编码'),
+  filePath: z.string().min(1).describe('Complete path of the file'),
+  content: z.string().describe('Content to be written to the file'),
+  createDirs: z.boolean().optional().default(true).describe('Whether to automatically create parent directories if they do not exist'),
+  append: z.boolean().optional().default(false).describe('Whether to append to an existing file instead of overwriting it'),
+  encoding: z.string().optional().default('utf8').describe('File encoding'),
 });
 
-// 文件写入工具的类型定义
+// File writer tool type definition
 type FileWriterParams = z.infer<typeof fileWriterSchema>;
 
 /**
- * 文件写入工具类
- * 提供写入文件到本地文件系统的能力
+ * File Writer Tool Class
+ * Provides the ability to write files to the local file system
  */
 export class FileWriterTool {
-  // 工具名称和描述
+  // Tool name and description
   readonly name = 'file_writer';
-  readonly description = '写入内容到指定文件路径，支持自动创建目录';
+  readonly description = 'Write content to the specified file path, with support for automatic directory creation';
   readonly version = '1.0.0';
   readonly schema = fileWriterSchema;
 
   /**
-   * 向MCP服务器注册工具
+   * Register the tool with the MCP server
    */
   register(server: McpServer): void {
     server.tool(
@@ -57,7 +57,7 @@ export class FileWriterTool {
   }
 
   /**
-   * 写入文件的实现
+   * Implementation of file writing
    */
   async writeFile(params: FileWriterParams): Promise<object> {
     try {

@@ -1,20 +1,20 @@
 /**
- * API客户端生成器MCP工具
+ * API Client Generator MCP Tool
  */
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ApiClientGenerator, ApiClientGeneratorOptions } from '../generators/api-client-generator';
 
-// MCP工具名称和描述
+// MCP tool names and descriptions
 const API_CLIENT_GENERATOR_TOOL_NAME = 'generate-api-client';
-const API_CLIENT_GENERATOR_TOOL_DESCRIPTION = '从Swagger/OpenAPI文档生成API客户端代码。';
+const API_CLIENT_GENERATOR_TOOL_DESCRIPTION = 'Generate API client code from Swagger/OpenAPI document.';
 
-// 优化版MCP工具名称和描述
+// Optimized version tool names and descriptions
 const OPTIMIZED_API_CLIENT_GENERATOR_TOOL_NAME = 'generate-api-client-optimized';
-const OPTIMIZED_API_CLIENT_GENERATOR_TOOL_DESCRIPTION = '从Swagger/OpenAPI文档生成API客户端代码（优化版，支持缓存和大型文档处理）。';
+const OPTIMIZED_API_CLIENT_GENERATOR_TOOL_DESCRIPTION = 'Generate API client code from Swagger/OpenAPI document (optimized version with caching and large document support).';
 
 /**
- * API客户端生成器工具类
+ * API Client Generator Tool Class
  */
 export class ApiClientGeneratorTool {
   name = API_CLIENT_GENERATOR_TOOL_NAME;
@@ -22,94 +22,94 @@ export class ApiClientGeneratorTool {
   optimizedName = OPTIMIZED_API_CLIENT_GENERATOR_TOOL_NAME;
   optimizedDescription = OPTIMIZED_API_CLIENT_GENERATOR_TOOL_DESCRIPTION;
 
-  // 定义参数模式
+  // Define parameter schema
   schema = z.object({
     /**
-     * Swagger/OpenAPI文档URL
+     * Swagger/OpenAPI document URL
      */
-    swaggerUrl: z.string().describe('Swagger/OpenAPI文档URL'),
+    swaggerUrl: z.string().describe('Swagger/OpenAPI document URL'),
     
     /**
-     * 输出目录
+     * Output directory
      */
-    outputDir: z.string().optional().describe('输出目录'),
+    outputDir: z.string().optional().describe('Output directory'),
     
     /**
-     * 是否覆盖现有文件
+     * Whether to overwrite existing files
      */
-    overwrite: z.boolean().optional().describe('是否覆盖现有文件'),
+    overwrite: z.boolean().optional().describe('Whether to overwrite existing files'),
     
     /**
-     * 文件前缀
+     * File prefix
      */
-    filePrefix: z.string().optional().describe('文件前缀'),
+    filePrefix: z.string().optional().describe('File prefix'),
     
     /**
-     * 文件后缀
+     * File suffix
      */
-    fileSuffix: z.string().optional().describe('文件后缀'),
+    fileSuffix: z.string().optional().describe('File suffix'),
     
     /**
-     * API客户端技术栈
+     * API client technology stack
      */
-    clientType: z.enum(['axios', 'fetch', 'react-query']).optional().describe('API客户端技术栈'),
+    clientType: z.enum(['axios', 'fetch', 'react-query']).optional().describe('API client technology stack'),
     
     /**
-     * 是否生成类型导入
+     * Whether to generate type imports
      */
-    generateTypeImports: z.boolean().optional().describe('是否生成类型导入'),
+    generateTypeImports: z.boolean().optional().describe('Whether to generate type imports'),
     
     /**
-     * 类型导入路径
+     * Types import path
      */
-    typesImportPath: z.string().optional().describe('类型导入路径'),
+    typesImportPath: z.string().optional().describe('Types import path'),
     
     /**
-     * 分组方式
+     * Grouping method
      */
-    groupBy: z.enum(['tag', 'path', 'none']).optional().describe('分组方式'),
+    groupBy: z.enum(['tag', 'path', 'none']).optional().describe('Grouping method'),
     
     /**
-     * 过滤tag列表
+     * Include tags filter
      */
-    includeTags: z.array(z.string()).optional().describe('过滤tag列表'),
+    includeTags: z.array(z.string()).optional().describe('Include tags filter'),
     
     /**
-     * 排除tag列表
+     * Exclude tags filter
      */
-    excludeTags: z.array(z.string()).optional().describe('排除tag列表'),
+    excludeTags: z.array(z.string()).optional().describe('Exclude tags filter'),
     
     /**
-     * 请求头信息
+     * Request headers
      */
-    headers: z.record(z.string()).optional().describe('请求头信息')
+    headers: z.record(z.string()).optional().describe('Request headers')
   });
 
-  // 定义优化版参数模式
+  // Define optimized parameter schema
   optimizedSchema = this.schema.extend({
     /**
-     * 是否使用缓存
+     * Whether to use cache
      */
-    useCache: z.boolean().optional().describe('是否使用缓存'),
+    useCache: z.boolean().optional().describe('Whether to use cache'),
     
     /**
-     * 缓存有效期（分钟）
+     * Cache TTL in minutes
      */
-    cacheTTLMinutes: z.number().optional().describe('缓存有效期（分钟）'),
+    cacheTTLMinutes: z.number().optional().describe('Cache TTL in minutes'),
     
     /**
-     * 是否跳过验证
+     * Whether to skip validation
      */
-    skipValidation: z.boolean().optional().describe('是否跳过验证'),
+    skipValidation: z.boolean().optional().describe('Whether to skip validation'),
     
     /**
-     * 是否启用懒加载
+     * Whether to use lazy loading
      */
-    lazyLoading: z.boolean().optional().describe('是否启用懒加载')
+    lazyLoading: z.boolean().optional().describe('Whether to use lazy loading')
   });
 
   /**
-   * 在MCP服务器上注册工具
+   * Register tool on the MCP server
    */
   register(server: McpServer) {
     // 注册标准版
@@ -138,10 +138,12 @@ export class ApiClientGeneratorTool {
         return await this.execute(optimizedParams);
       }
     );
+    
+    console.log(`✅ 已注册API客户端生成器工具: ${this.name}, ${this.optimizedName}`);
   }
 
   /**
-   * 执行API客户端生成
+   * Execute API client generation
    */
   async execute(params: z.infer<typeof this.optimizedSchema>) {
     try {

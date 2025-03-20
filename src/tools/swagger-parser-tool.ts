@@ -1,48 +1,48 @@
 /**
- * Swagger解析MCP工具
+ * Swagger Parser MCP Tool
  */
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { OptimizedSwaggerApiParser } from '../optimized-swagger-parser';
 
-// MCP工具名称和描述
+// MCP tool names and descriptions
 const SWAGGER_PARSER_TOOL_NAME = 'parse-swagger';
-const SWAGGER_PARSER_TOOL_DESCRIPTION = '解析Swagger/OpenAPI文档，并返回API操作信息。';
+const SWAGGER_PARSER_TOOL_DESCRIPTION = 'Parse Swagger/OpenAPI document and return API operation information.';
 
 /**
- * Swagger解析工具类
- * 注意：这是原始工具，为了向后兼容性保留
- * 推荐使用 'parse-swagger-optimized' 或 'parse-swagger-lite' 工具
+ * Swagger Parser Tool Class
+ * Note: This is the original tool, kept for backward compatibility
+ * Recommended to use 'parse-swagger-optimized' or 'parse-swagger-lite' tools
  */
 export class SwaggerParserTool {
   name = SWAGGER_PARSER_TOOL_NAME;
   description = SWAGGER_PARSER_TOOL_DESCRIPTION;
 
-  // 定义参数模式
+  // Define parameter schema
   schema = z.object({
     /**
-     * Swagger/OpenAPI文档URL
+     * Swagger/OpenAPI document URL
      */
-    url: z.string().describe('Swagger/OpenAPI文档URL'),
+    url: z.string().describe('Swagger/OpenAPI document URL'),
     
     /**
-     * 请求头
+     * Request headers
      */
-    headers: z.record(z.string()).optional().describe('请求头信息'),
+    headers: z.record(z.string()).optional().describe('Request headers'),
     
     /**
-     * 是否包含模式定义
+     * Whether to include schema definitions
      */
-    includeSchemas: z.boolean().optional().describe('是否包含模式定义'),
+    includeSchemas: z.boolean().optional().describe('Whether to include schema definitions'),
     
     /**
-     * 是否包含所有详细信息
+     * Whether to include all details
      */
-    includeDetails: z.boolean().optional().describe('是否包含所有详细信息，如请求体、响应等')
+    includeDetails: z.boolean().optional().describe('Whether to include all details like request bodies, responses, etc.')
   });
 
   /**
-   * 在MCP服务器上注册工具
+   * Register tool on the MCP server
    */
   register(server: McpServer) {
     server.tool(
@@ -56,7 +56,7 @@ export class SwaggerParserTool {
   }
 
   /**
-   * 执行Swagger解析
+   * Execute Swagger parsing
    */
   async execute({
     url,

@@ -1,80 +1,80 @@
 /**
- * 优化的Swagger解析MCP工具
+ * Optimized Swagger Parser MCP Tool
  */
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { OptimizedSwaggerApiParser } from '../optimized-swagger-parser';
 
-// MCP工具名称和描述
+// MCP tool names and descriptions
 const OPTIMIZED_SWAGGER_PARSER_TOOL_NAME = 'parse-swagger-optimized';
-const OPTIMIZED_SWAGGER_PARSER_TOOL_DESCRIPTION = '使用优化的解析器解析Swagger/OpenAPI文档，支持缓存和大型文档处理。';
+const OPTIMIZED_SWAGGER_PARSER_TOOL_DESCRIPTION = 'Parse Swagger/OpenAPI document using optimized parser with caching and large document support.';
 
-// 轻量版工具名称和描述
+// Lite version tool names and descriptions
 const LITE_SWAGGER_PARSER_TOOL_NAME = 'parse-swagger-lite';
-const LITE_SWAGGER_PARSER_TOOL_DESCRIPTION = '轻量级解析Swagger/OpenAPI文档，更快但只返回基本信息（适用于大型文档）。';
+const LITE_SWAGGER_PARSER_TOOL_DESCRIPTION = 'Lightweight parsing of Swagger/OpenAPI document, faster but returns only basic information (suitable for large documents).';
 
 /**
- * 优化的Swagger解析工具类
+ * Optimized Swagger Parser Tool Class
  */
 export class OptimizedSwaggerParserTool {
   name = OPTIMIZED_SWAGGER_PARSER_TOOL_NAME;
   description = OPTIMIZED_SWAGGER_PARSER_TOOL_DESCRIPTION;
 
-  // 定义参数模式
+  // Define parameter schema
   schema = z.object({
     /**
-     * Swagger/OpenAPI文档URL
+     * Swagger/OpenAPI document URL
      */
-    url: z.string().describe('Swagger/OpenAPI文档URL'),
+    url: z.string().describe('Swagger/OpenAPI document URL'),
     
     /**
-     * 请求头
+     * Request headers
      */
-    headers: z.record(z.string()).optional().describe('请求头信息'),
+    headers: z.record(z.string()).optional().describe('Request headers'),
     
     /**
-     * 是否包含模式定义
+     * Whether to include schema definitions
      */
-    includeSchemas: z.boolean().optional().describe('是否包含模式定义'),
+    includeSchemas: z.boolean().optional().describe('Whether to include schema definitions'),
     
     /**
-     * 是否包含所有详细信息
+     * Whether to include all details
      */
-    includeDetails: z.boolean().optional().describe('是否包含所有详细信息，如请求体、响应等'),
+    includeDetails: z.boolean().optional().describe('Whether to include all details like request bodies, responses, etc.'),
     
     /**
-     * 是否跳过验证
+     * Whether to skip validation
      */
-    skipValidation: z.boolean().optional().describe('是否跳过验证，用于处理不完全合规的API文档'),
+    skipValidation: z.boolean().optional().describe('Whether to skip validation, used for handling non-fully compliant API documents'),
     
     /**
-     * 是否使用缓存
+     * Whether to use cache
      */
-    useCache: z.boolean().optional().describe('是否使用缓存'),
+    useCache: z.boolean().optional().describe('Whether to use cache'),
     
     /**
-     * 缓存有效期（分钟）
+     * Cache TTL in minutes
      */
-    cacheTTLMinutes: z.number().optional().describe('缓存有效期（分钟）'),
+    cacheTTLMinutes: z.number().optional().describe('Cache TTL in minutes'),
     
     /**
-     * 是否启用懒加载
+     * Whether to use lazy loading for schema parsing
      */
-    lazyLoading: z.boolean().optional().describe('是否启用懒加载，用于快速解析大型文档'),
+    lazyLoading: z.boolean().optional().describe('Whether to use lazy loading for schema parsing'),
     
     /**
-     * 特定标签筛选
+     * Filter operations by tag
      */
-    filterTag: z.string().optional().describe('只返回特定标签的API操作'),
+    filterTag: z.string().optional().describe('Filter operations by tag'),
     
     /**
-     * 路径前缀筛选
+     * Filter operations by path prefix
      */
-    pathPrefix: z.string().optional().describe('只返回特定路径前缀的API操作'),
+    pathPrefix: z.string().optional().describe('Filter operations by path prefix'),
   });
 
   /**
-   * 在MCP服务器上注册工具
+   * Register tool on the MCP server
    */
   register(server: McpServer) {
     // 注册完整版解析工具
@@ -142,7 +142,7 @@ export class OptimizedSwaggerParserTool {
   }
 
   /**
-   * 执行Swagger解析
+   * Execute Swagger parsing
    */
   async execute({
     url,
@@ -302,7 +302,7 @@ export class OptimizedSwaggerParserTool {
   }
   
   /**
-   * 收集模式引用
+   * Collect schema references
    */
   private collectSchemaRefs(obj: any, refs: Set<string>): void {
     if (!obj) return;
@@ -345,7 +345,7 @@ export class OptimizedSwaggerParserTool {
   }
   
   /**
-   * 清除缓存
+   * Clear cache
    */
   static clearCache(url?: string): void {
     OptimizedSwaggerApiParser.clearCache(url);

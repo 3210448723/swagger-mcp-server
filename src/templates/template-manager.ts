@@ -1,6 +1,6 @@
 /**
- * 模板管理器
- * 负责管理和处理各种代码生成模板
+ * Template Manager
+ * Responsible for managing and processing various code generation templates
  */
 import fs from 'fs/promises';
 import path from 'path';
@@ -19,14 +19,14 @@ const CUSTOM_TEMPLATES_DIR = path.join(TEMPLATES_ROOT, 'custom');
 const BUILT_IN_TEMPLATES_CONFIG = path.join(BUILT_IN_TEMPLATES_DIR, 'templates.json');
 const CUSTOM_TEMPLATES_CONFIG = path.join(CUSTOM_TEMPLATES_DIR, 'templates.json');
 
-// 模板类型枚举
+// Template type enum
 export enum TemplateType {
   API_CLIENT = 'api-client',
   TYPESCRIPT_TYPES = 'typescript-types',
   CONFIG_FILE = 'config-file'
 }
 
-// 框架类型枚举
+// Framework type enum
 export enum FrameworkType {
   AXIOS = 'axios',
   FETCH = 'fetch',
@@ -36,7 +36,7 @@ export enum FrameworkType {
   VUE = 'vue'
 }
 
-// 模板接口
+// Template interface
 export interface Template {
   id: string;
   name: string;

@@ -1,5 +1,7 @@
 # Swagger MCP 服务器
 
+[![smithery badge](https://smithery.ai/badge/@tuskermanshu/swagger-mcp-server)](https://smithery.ai/server/@tuskermanshu/swagger-mcp-server)
+
 基于Model Context Protocol (MCP)的Swagger/OpenAPI工具服务器，能够根据用户提供的Swagger/OpenAPI地址，解析API定义，并自动生成对应的接口代码和TypeScript类型约束。
 
 ## 功能特性
@@ -10,6 +12,15 @@
 - 提供MCP工具接口，支持与大语言模型集成
 
 ## 安装
+
+### Installing via Smithery
+
+To install swagger-mcp-server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@tuskermanshu/swagger-mcp-server):
+
+```bash
+npx -y @smithery/cli install @tuskermanshu/swagger-mcp-server --client claude
+```
+
 
 ```bash
 # 使用npm

@@ -5,8 +5,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { OpenAPIV3 } from 'openapi-types';
 import { BaseCodeGenerator, CodeGenerationResult, CodeGeneratorOptions } from './code-generator';
-import   { SwaggerApiParser } from '../swagger-parser';
-import  type {  ApiOperation } from '../swagger-parser';
+import { OptimizedSwaggerApiParser } from '../optimized-swagger-parser';
+import type { ApiOperation } from '../optimized-swagger-parser';
 
 /**
  * API客户端生成器选项
@@ -60,6 +60,35 @@ export interface ApiClientGeneratorOptions extends CodeGeneratorOptions {
    * 自定义模板路径
    */
   templatePath?: string;
+
+  /**
+   * 是否使用缓存
+   * @default true
+   */
+  useCache?: boolean;
+
+  /**
+   * 缓存有效期（分钟）
+   * @default 60
+   */
+  cacheTTLMinutes?: number;
+
+  /**
+   * 是否跳过验证
+   * @default false
+   */
+  skipValidation?: boolean;
+
+  /**
+   * 是否启用懒加载
+   * @default true
+   */
+  lazyLoading?: boolean;
+
+  /**
+   * 进度回调函数
+   */
+  progressCallback?: (progress: number, message: string) => void;
 }
 
 /**
@@ -119,19 +148,41 @@ export class ApiClientGenerator extends BaseCodeGenerator<ApiClientGeneratorOpti
       const generateTypeImports = options.generateTypeImports !== false;
       const typesImportPath = options.typesImportPath || '../types';
       const groupBy = options.groupBy || 'tag';
+      const useCache = options.useCache !== false;
+      const cacheTTLMinutes = options.cacheTTLMinutes || 60;
+      const skipValidation = options.skipValidation || false;
+      const lazyLoading = options.lazyLoading !== false;
       
       // 创建输出目录
       await this.ensureDirectoryExists(outputDir);
       
       // 解析Swagger文档
       console.log(`[ApiClientGenerator] 解析Swagger文档: ${options.swaggerUrl}`);
-      const parser = new SwaggerApiParser({
+      
+      // 设置进度日志
+      const logProgress = (progress: number, message: string) => {
+        console.log(`[ApiClientGenerator] 进度 ${Math.round(progress * 100)}%: ${message}`);
+        if (options.progressCallback) {
+          options.progressCallback(progress, message);
+        }
+      };
+      
+      // 使用优化的解析器
+      const parser = new OptimizedSwaggerApiParser({
         url: options.swaggerUrl,
-        headers: options.headers
+        headers: options.headers,
+        useCache,
+        cacheTTL: cacheTTLMinutes * 60 * 1000, // 转换为毫秒
+        skipValidation,
+        lazyLoading,
+        progressCallback: logProgress
       });
       
+      logProgress(0.1, '开始获取API文档');
       const api = await parser.fetchApi();
-      const operations = parser.getAllOperations();
+      logProgress(0.3, 'API文档获取完成，开始获取操作列表');
+      
+      const operations = await parser.getAllOperations();
       
       if (!operations || operations.length === 0) {
         return {
@@ -141,11 +192,11 @@ export class ApiClientGenerator extends BaseCodeGenerator<ApiClientGeneratorOpti
         };
       }
       
-      console.log(`[ApiClientGenerator] 找到 ${operations.length} 个API操作`);
+      logProgress(0.4, `找到 ${operations.length} 个API操作，准备生成代码`);
       
       // 过滤操作
       const filteredOperations = this.filterOperations(operations, options.includeTags, options.excludeTags);
-      console.log(`[ApiClientGenerator] 过滤后剩余 ${filteredOperations.length} 个API操作`);
+      logProgress(0.5, `过滤后剩余 ${filteredOperations.length} 个API操作`);
       
       // 分组操作
       const groupedOperations = this.groupOperations(filteredOperations, groupBy);
@@ -155,9 +206,13 @@ export class ApiClientGenerator extends BaseCodeGenerator<ApiClientGeneratorOpti
       const warnings: string[] = [];
       
       // 获取所有用到的模式
-      const schemas = parser.getSchemas();
+      logProgress(0.6, '加载模式定义');
+      const schemas = await parser.getAllSchemas();
       
       // 为每个分组生成文件
+      let fileCount = 0;
+      const totalGroups = Object.keys(groupedOperations).length;
+      
       for (const [groupName, operations] of Object.entries(groupedOperations)) {
         try {
           // 格式化分组名称
@@ -188,7 +243,10 @@ export class ApiClientGenerator extends BaseCodeGenerator<ApiClientGeneratorOpti
           await fs.writeFile(filePath, clientCode, 'utf8');
           generatedFiles.push(filePath);
           
-          console.log(`[ApiClientGenerator] 已生成: ${filePath}`);
+          // 更新进度
+          fileCount++;
+          const progress = 0.6 + (0.3 * fileCount / totalGroups);
+          logProgress(progress, `生成文件 ${fileCount}/${totalGroups}: ${fileName}`);
         } catch (err) {
           warnings.push(`无法处理分组 ${groupName}: ${err instanceof Error ? err.message : String(err)}`);
         }
@@ -202,7 +260,7 @@ export class ApiClientGenerator extends BaseCodeGenerator<ApiClientGeneratorOpti
         await fs.writeFile(indexPath, indexContent, 'utf8');
         generatedFiles.push(indexPath);
         
-        console.log(`[ApiClientGenerator] 已生成索引文件: ${indexPath}`);
+        logProgress(0.95, `已生成索引文件: ${indexPath}`);
       }
       
       // 生成基础客户端配置文件
@@ -215,9 +273,11 @@ export class ApiClientGenerator extends BaseCodeGenerator<ApiClientGeneratorOpti
           await fs.writeFile(configFilePath, configCode, 'utf8');
           generatedFiles.push(configFilePath);
           
-          console.log(`[ApiClientGenerator] 已生成客户端配置文件: ${configFilePath}`);
+          logProgress(0.98, `已生成客户端配置文件: ${configFilePath}`);
         }
       }
+      
+      logProgress(1.0, `代码生成完成，共生成 ${generatedFiles.length} 个文件`);
       
       return {
         files: generatedFiles,

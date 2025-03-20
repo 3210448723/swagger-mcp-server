@@ -3,7 +3,7 @@
  */
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { SwaggerApiParser } from '../swagger-parser';
+import { OptimizedSwaggerApiParser } from '../optimized-swagger-parser';
 
 // MCP工具名称和描述
 const SWAGGER_PARSER_TOOL_NAME = 'parse-swagger';
@@ -11,6 +11,8 @@ const SWAGGER_PARSER_TOOL_DESCRIPTION = '解析Swagger/OpenAPI文档，并返回
 
 /**
  * Swagger解析工具类
+ * 注意：这是原始工具，为了向后兼容性保留
+ * 推荐使用 'parse-swagger-optimized' 或 'parse-swagger-lite' 工具
  */
 export class SwaggerParserTool {
   name = SWAGGER_PARSER_TOOL_NAME;
@@ -66,13 +68,18 @@ export class SwaggerParserTool {
       console.log(`[SwaggerParserTool] 解析Swagger文档: ${url}`);
       
       // 创建解析器实例
-      const parser = new SwaggerApiParser({ url, headers });
+      const parser = new OptimizedSwaggerApiParser({ 
+        url, 
+        headers, 
+        useCache: true, 
+        skipValidation: true 
+      });
       
       // 解析API文档
       const api = await parser.fetchApi();
       
       // 获取API操作
-      const operations = parser.getAllOperations();
+      const operations = await parser.getAllOperations();
       
       // 构建结果对象
       const result: any = {
@@ -109,7 +116,7 @@ export class SwaggerParserTool {
       
       // 如果需要模式定义，则添加到结果中
       if (includeSchemas) {
-        result.schemas = parser.getSchemas();
+        result.schemas = await parser.getAllSchemas();
       }
       
       console.log(`[SwaggerParserTool] 解析完成，找到 ${operations.length} 个API操作`);

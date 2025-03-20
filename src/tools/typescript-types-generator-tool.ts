@@ -9,6 +9,10 @@ import { TypeScriptTypesGenerator, TypeScriptTypesGeneratorOptions } from '../ge
 const TS_TYPES_GENERATOR_TOOL_NAME = 'generate-typescript-types';
 const TS_TYPES_GENERATOR_TOOL_DESCRIPTION = '从Swagger/OpenAPI文档生成TypeScript类型定义。';
 
+// 性能优化版工具名称和描述
+const TS_TYPES_GENERATOR_OPTIMIZED_TOOL_NAME = 'generate-typescript-types-optimized';
+const TS_TYPES_GENERATOR_OPTIMIZED_TOOL_DESCRIPTION = '使用优化选项从Swagger/OpenAPI文档生成TypeScript类型定义，支持缓存和大型文档处理。';
+
 /**
  * TypeScript类型生成器工具类
  */
@@ -81,19 +85,64 @@ export class TypeScriptTypesGeneratorTool {
     /**
      * 请求头信息
      */
-    headers: z.record(z.string()).optional().describe('请求头信息')
+    headers: z.record(z.string()).optional().describe('请求头信息'),
+    
+    /**
+     * 是否使用缓存
+     */
+    useCache: z.boolean().optional().describe('是否使用缓存'),
+    
+    /**
+     * 缓存有效期（分钟）
+     */
+    cacheTTLMinutes: z.number().optional().describe('缓存有效期（分钟）'),
+    
+    /**
+     * 是否跳过验证
+     */
+    skipValidation: z.boolean().optional().describe('是否跳过验证'),
+    
+    /**
+     * 是否启用懒加载
+     */
+    lazyLoading: z.boolean().optional().describe('是否启用懒加载')
   });
 
   /**
    * 在MCP服务器上注册工具
    */
   register(server: McpServer) {
+    // 注册标准工具
     server.tool(
       this.name,
       this.description,
       this.schema.shape,
       async (params) => {
-        return await this.execute(params);
+        // 使用默认参数
+        const options = {
+          ...params,
+          useCache: true,
+          skipValidation: true,
+          lazyLoading: false
+        };
+        return await this.execute(options);
+      }
+    );
+    
+    // 注册优化版工具
+    server.tool(
+      TS_TYPES_GENERATOR_OPTIMIZED_TOOL_NAME,
+      TS_TYPES_GENERATOR_OPTIMIZED_TOOL_DESCRIPTION,
+      this.schema.shape,
+      async (params) => {
+        // 默认启用性能优化选项
+        const options = {
+          ...params,
+          useCache: params.useCache !== false,
+          skipValidation: params.skipValidation !== false,
+          lazyLoading: params.lazyLoading !== false
+        };
+        return await this.execute(options);
       }
     );
   }
@@ -102,14 +151,28 @@ export class TypeScriptTypesGeneratorTool {
    * 执行TypeScript类型生成
    */
   async execute(params: z.infer<typeof this.schema>) {
+    let progress = 0;
+    let progressMessage = '';
+    
+    // 定义进度回调
+    const progressCallback = (newProgress: number, message: string) => {
+      progress = newProgress;
+      progressMessage = message;
+      console.log(`[Progress] ${Math.round(newProgress * 100)}%: ${message}`);
+    };
+    
     try {
       console.log(`[TypeScriptTypesGeneratorTool] 开始生成TypeScript类型: ${params.swaggerUrl}`);
+      console.log(`[TypeScriptTypesGeneratorTool] 缓存: ${params.useCache ? '启用' : '禁用'}, 懒加载: ${params.lazyLoading ? '启用' : '禁用'}`);
       
       // 创建生成器实例
       const generator = new TypeScriptTypesGenerator();
       
       // 执行生成
-      const result = await generator.generate(params as TypeScriptTypesGeneratorOptions);
+      const result = await generator.generate({
+        ...params,
+        progressCallback
+      } as TypeScriptTypesGeneratorOptions);
       
       // 处理结果
       if (result.success) {
@@ -122,7 +185,9 @@ export class TypeScriptTypesGeneratorTool {
               text: JSON.stringify({
                 success: true,
                 files: result.files,
-                warnings: result.warnings
+                warnings: result.warnings,
+                progress: 1.0,
+                progressMessage: '完成'
               }, null, 2)
             }
           ]
@@ -136,7 +201,9 @@ export class TypeScriptTypesGeneratorTool {
               type: 'text' as const,
               text: JSON.stringify({
                 success: false,
-                error: result.error
+                error: result.error,
+                progress: progress,
+                progressMessage: progressMessage
               }, null, 2)
             }
           ]
@@ -152,7 +219,9 @@ export class TypeScriptTypesGeneratorTool {
             type: 'text' as const,
             text: JSON.stringify({
               success: false,
-              error: error instanceof Error ? error.message : String(error)
+              error: error instanceof Error ? error.message : String(error),
+              progress: progress,
+              progressMessage: progressMessage
             }, null, 2)
           }
         ]

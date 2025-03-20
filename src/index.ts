@@ -4,9 +4,11 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { SwaggerParserTool } from './tools/swagger-parser-tool';
+import { OptimizedSwaggerParserTool } from './tools/optimized-swagger-parser-tool';
 import { TypeScriptTypesGeneratorTool } from './tools/typescript-types-generator-tool';
 import { ApiClientGeneratorTool } from './tools/api-client-generator-tool';
 import { FileWriterTool } from './tools/file-writer-tool';
+import { TemplateManagerTool } from './tools/template-manager-tool';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 // HTTP协议未合并到正式仓库，暂时移除
@@ -55,9 +57,11 @@ export async function createMcpServer(config: {
   
   // 注册工具
   new SwaggerParserTool().register(server);
+  new OptimizedSwaggerParserTool().register(server);
   new TypeScriptTypesGeneratorTool().register(server);
   new ApiClientGeneratorTool().register(server);
   new FileWriterTool().register(server);
+  new TemplateManagerTool().register(server);
   
   // 仅使用stdio传输
   const transport = new StdioServerTransport();
@@ -77,7 +81,10 @@ export { createMcpServer as createSwaggerMcpServer };
 export { createMcpServer as startSwaggerMcpServer };
 // 确保swagger-parser.ts文件存在并导出SwaggerApiParser
 export { SwaggerApiParser } from './swagger-parser';
+export { OptimizedSwaggerApiParser } from './optimized-swagger-parser';
 // 导出生成器相关内容
 export * from './generators/code-generator';
 export * from './generators/typescript-types-generator';
-export * from './generators/api-client-generator'; 
+export * from './generators/api-client-generator';
+// 导出模板相关内容
+export * from './templates'; 

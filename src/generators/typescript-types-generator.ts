@@ -5,7 +5,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { OpenAPIV3 } from 'openapi-types';
 import { BaseCodeGenerator, CodeGenerationResult, CodeGeneratorOptions } from './code-generator';
-import { SwaggerApiParser } from '../swagger-parser';
+import { OptimizedSwaggerApiParser } from '../optimized-swagger-parser';
 
 /**
  * TypeScript类型生成器选项
@@ -60,6 +60,31 @@ export interface TypeScriptTypesGeneratorOptions extends CodeGeneratorOptions {
    * 请求头信息
    */
   headers?: Record<string, string>;
+
+  /**
+   * 是否使用缓存
+   */
+  useCache?: boolean;
+  
+  /**
+   * 缓存有效期（分钟）
+   */
+  cacheTTLMinutes?: number;
+  
+  /**
+   * 是否跳过验证
+   */
+  skipValidation?: boolean;
+
+  /**
+   * 是否启用懒加载
+   */
+  lazyLoading?: boolean;
+  
+  /**
+   * 进度回调函数
+   */
+  progressCallback?: (progress: number, message: string) => void;
 }
 
 /**
@@ -112,19 +137,38 @@ export class TypeScriptTypesGenerator extends BaseCodeGenerator<TypeScriptTypesG
       const generateEnums = options.generateEnums !== false;
       const strictTypes = options.strictTypes || true;
       const generateIndex = options.generateIndex !== false;
+      const useCache = options.useCache !== false;
+      const skipValidation = options.skipValidation !== false;
+      const lazyLoading = options.lazyLoading || false;
+      const cacheTTLMinutes = options.cacheTTLMinutes || 60;
       
       // 创建输出目录
       await this.ensureDirectoryExists(outputDir);
       
-      // 解析Swagger文档
-      console.log(`[TypeScriptTypesGenerator] 解析Swagger文档: ${options.swaggerUrl}`);
-      const parser = new SwaggerApiParser({
-        url: options.swaggerUrl,
-        headers: options.headers
+      // 定义进度回调
+      const progressCallback = options.progressCallback || ((progress: number, message: string) => {
+        console.log(`[TypeScriptTypesGenerator] 进度: ${Math.round(progress * 100)}%, ${message}`);
       });
       
+      // 解析Swagger文档
+      console.log(`[TypeScriptTypesGenerator] 解析Swagger文档: ${options.swaggerUrl}`);
+      
+      // 使用优化的Swagger解析器
+      const parser = new OptimizedSwaggerApiParser({
+        url: options.swaggerUrl,
+        headers: options.headers,
+        skipValidation,
+        useCache,
+        cacheTTL: cacheTTLMinutes * 60 * 1000,
+        lazyLoading,
+        progressCallback
+      });
+      
+      // 获取API文档
       const api = await parser.fetchApi();
-      const schemas = parser.getSchemas();
+      
+      // 获取模式定义
+      const schemas = await parser.getAllSchemas();
       
       if (!schemas || Object.keys(schemas).length === 0) {
         return {

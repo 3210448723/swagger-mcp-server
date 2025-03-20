@@ -7,6 +7,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 // HTTP 协议尚未合并到正式仓库，暂时不使用
 // import { HttpServerTransport } from '@modelcontextprotocol/sdk/server/http.js';
 import { SwaggerParserTool } from './tools/swagger-parser-tool';
+import { OptimizedSwaggerParserTool } from './tools/optimized-swagger-parser-tool';
 import { TypeScriptTypesGeneratorTool } from './tools/typescript-types-generator-tool';
 import { ApiClientGeneratorTool } from './tools/api-client-generator-tool';
 import { FileWriterTool } from './tools/file-writer-tool';
@@ -68,6 +69,7 @@ export async function startMcpToolsServer(options: {
 function registerAllTools(server: McpServer): void {
   const tools = [
     new SwaggerParserTool(),
+    new OptimizedSwaggerParserTool(),
     new TypeScriptTypesGeneratorTool(),
     new ApiClientGeneratorTool(),
     new FileWriterTool(),

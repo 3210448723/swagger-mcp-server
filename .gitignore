@@ -1,11 +1,9 @@
 # 依赖目录
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-package-lock.json
-yarn.lock
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+pnpm-debug.log
 .pnpm-store/
 
 # 构建输出
@@ -19,19 +17,16 @@ swagger-mcp-config.local.json
 generated/
 .mcp-cache/
 
-# 环境变量和配置
+# 环境变量
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
-config.local.js
-*.local.json
+.env.*.local
 
 # IDE和编辑器
 .idea/
 .vscode/
-*.sublime-*
+*.sublime-project
+*.sublime-workspace
 *.swp
 *.swo
 .vs/
@@ -40,9 +35,6 @@ config.local.js
 # 日志
 logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # 操作系统
 .DS_Store
@@ -56,18 +48,21 @@ coverage/
 .nyc_output/
 
 # 临时文件
-.tmp/
 .temp/
+.tmp/
 .cache/
 .parcel-cache/
-tmp/
-temp/
+
+# API缓存目录
+.api-cache/
+
+# Swagger临时文件
+swagger-output.json
+swagger-ui/
+api-docs.json
 
 # 调试文件
-.node_repl_history
-*.heap
-*.cpuprofile
+.inspector/
 
-# Swagger临时文件和输出
-swagger-output.json
-api-docs.json
+# 本地配置
+swagger-mcp-config.local.json

@@ -9,12 +9,18 @@ import { ApiClientGenerator, ApiClientGeneratorOptions } from '../generators/api
 const API_CLIENT_GENERATOR_TOOL_NAME = 'generate-api-client';
 const API_CLIENT_GENERATOR_TOOL_DESCRIPTION = '从Swagger/OpenAPI文档生成API客户端代码。';
 
+// 优化版MCP工具名称和描述
+const OPTIMIZED_API_CLIENT_GENERATOR_TOOL_NAME = 'generate-api-client-optimized';
+const OPTIMIZED_API_CLIENT_GENERATOR_TOOL_DESCRIPTION = '从Swagger/OpenAPI文档生成API客户端代码（优化版，支持缓存和大型文档处理）。';
+
 /**
  * API客户端生成器工具类
  */
 export class ApiClientGeneratorTool {
   name = API_CLIENT_GENERATOR_TOOL_NAME;
   description = API_CLIENT_GENERATOR_TOOL_DESCRIPTION;
+  optimizedName = OPTIMIZED_API_CLIENT_GENERATOR_TOOL_NAME;
+  optimizedDescription = OPTIMIZED_API_CLIENT_GENERATOR_TOOL_DESCRIPTION;
 
   // 定义参数模式
   schema = z.object({
@@ -79,10 +85,34 @@ export class ApiClientGeneratorTool {
     headers: z.record(z.string()).optional().describe('请求头信息')
   });
 
+  // 定义优化版参数模式
+  optimizedSchema = this.schema.extend({
+    /**
+     * 是否使用缓存
+     */
+    useCache: z.boolean().optional().describe('是否使用缓存'),
+    
+    /**
+     * 缓存有效期（分钟）
+     */
+    cacheTTLMinutes: z.number().optional().describe('缓存有效期（分钟）'),
+    
+    /**
+     * 是否跳过验证
+     */
+    skipValidation: z.boolean().optional().describe('是否跳过验证'),
+    
+    /**
+     * 是否启用懒加载
+     */
+    lazyLoading: z.boolean().optional().describe('是否启用懒加载')
+  });
+
   /**
    * 在MCP服务器上注册工具
    */
   register(server: McpServer) {
+    // 注册标准版
     server.tool(
       this.name,
       this.description,
@@ -91,20 +121,46 @@ export class ApiClientGeneratorTool {
         return await this.execute(params);
       }
     );
+
+    // 注册优化版
+    server.tool(
+      this.optimizedName,
+      this.optimizedDescription,
+      this.optimizedSchema.shape,
+      async (params) => {
+        // 设置优化版默认选项
+        const optimizedParams = {
+          ...params,
+          useCache: params.useCache !== false,
+          lazyLoading: params.lazyLoading !== false,
+          skipValidation: params.skipValidation || false
+        };
+        return await this.execute(optimizedParams);
+      }
+    );
   }
 
   /**
    * 执行API客户端生成
    */
-  async execute(params: z.infer<typeof this.schema>) {
+  async execute(params: z.infer<typeof this.optimizedSchema>) {
     try {
       console.log(`[ApiClientGeneratorTool] 开始生成API客户端: ${params.swaggerUrl}`);
       
       // 创建生成器实例
       const generator = new ApiClientGenerator();
       
+      // 记录进度的函数
+      let progressUpdates: { progress: number, message: string }[] = [];
+      const progressCallback = (progress: number, message: string) => {
+        progressUpdates.push({ progress, message });
+      };
+      
       // 执行生成
-      const result = await generator.generate(params as ApiClientGeneratorOptions);
+      const result = await generator.generate({
+        ...params,
+        progressCallback
+      } as ApiClientGeneratorOptions);
       
       // 处理结果
       if (result.success) {
@@ -117,7 +173,8 @@ export class ApiClientGeneratorTool {
               text: JSON.stringify({
                 success: true,
                 files: result.files,
-                warnings: result.warnings
+                warnings: result.warnings,
+                progress: progressUpdates
               }, null, 2)
             }
           ]
@@ -131,7 +188,8 @@ export class ApiClientGeneratorTool {
               type: 'text' as const,
               text: JSON.stringify({
                 success: false,
-                error: result.error
+                error: result.error,
+                progress: progressUpdates
               }, null, 2)
             }
           ]

@@ -27,6 +27,12 @@ npm install
 pnpm install
 ```
 
+### 编译项目
+
+```bash
+npm run build
+```
+
 ### 启动服务器
 
 ```bash
